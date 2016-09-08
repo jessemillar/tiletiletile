@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/draw"
 	"image/png"
 	"log"
 	"math"
 	"os"
+	"strconv"
 )
 
 type boundaries struct {
@@ -22,13 +24,52 @@ type coordinates struct {
 }
 
 func main() {
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: tiletiletile [input filename] [output filename] [size] [width (optional)] [height (optional)]")
+		return
+	}
+
+	input := os.Args[1]
+	output := os.Args[2]
+	size := os.Args[3]
+
+	if output[len(output)-3:] != "png" {
+		fmt.Println("tiletiletile only supports creating PNG images")
+		return
+	}
+
 	bounds := boundaries{}
-	bounds.width = 100
-	bounds.height = 200
+
+	if size == "custom" {
+		if len(os.Args) < 5 {
+			fmt.Println("If \"custom\" is used, [width] and [height] must be supplied")
+			return
+		}
+
+		width, err := strconv.Atoi(os.Args[4])
+		if err != nil {
+			log.Print(err)
+			return
+		}
+
+		bounds.width = width
+
+		height, err := strconv.Atoi(os.Args[5])
+		if err != nil {
+			log.Print(err)
+			return
+		}
+
+		bounds.height = height
+	} else if size == "iphone6" {
+		bounds.width = 852
+		bounds.height = 1608
+	}
+
 	bounds.center.x = bounds.width / 2
 	bounds.center.y = bounds.height / 2
 
-	rawImageFile, err := os.Open("test.png")
+	rawImageFile, err := os.Open(input)
 	if err != nil {
 		log.Print(err)
 		return
@@ -57,7 +98,7 @@ func main() {
 		}
 	}
 
-	exportedImage, err := os.Create("new.png")
+	exportedImage, err := os.Create(output)
 	if err != nil {
 		log.Print(err)
 		return
